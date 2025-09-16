@@ -1,0 +1,99 @@
+--// 🔥 Real Real Backdoor Scanner X v2 🔥
+-- Full Fresh Design, Real Remote + Script Detection
+
+local player = game.Players.LocalPlayer
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "RealBackdoorScannerX"
+
+-- UI Frame
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0, 450, 0, 320)
+main.Position = UDim2.new(0.5, -225, 0.5, -160)
+main.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+main.BorderSizePixel = 0
+
+-- Title
+local title = Instance.new("TextLabel", main)
+title.Size = UDim2.new(1, 0, 0, 40)
+title.Text = "🧠 Backdoor Scanner X"
+title.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+title.TextColor3 = Color3.fromRGB(255, 80, 80)
+title.Font = Enum.Font.GothamBlack
+title.TextScaled = true
+
+-- Scan Button
+local scanBtn = Instance.new("TextButton", main)
+scanBtn.Position = UDim2.new(0.5, -75, 0, 50)
+scanBtn.Size = UDim2.new(0, 150, 0, 40)
+scanBtn.Text = "SCAN GAME"
+scanBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 255)
+scanBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+scanBtn.Font = Enum.Font.GothamBold
+scanBtn.TextScaled = true
+
+-- Result Box
+local resultBox = Instance.new("TextBox", main)
+resultBox.Position = UDim2.new(0, 10, 0, 100)
+resultBox.Size = UDim2.new(1, -20, 1, -110)
+resultBox.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+resultBox.TextColor3 = Color3.fromRGB(200, 200, 200)
+resultBox.Font = Enum.Font.Code
+resultBox.TextSize = 16
+resultBox.TextWrapped = false
+resultBox.TextXAlignment = Enum.TextXAlignment.Left
+resultBox.TextYAlignment = Enum.TextYAlignment.Top
+resultBox.ClearTextOnFocus = false
+resultBox.MultiLine = true
+resultBox.Text = "Ready to scan..."
+
+-- Dragable Frame
+main.Active = true
+main.Draggable = true
+
+-- 🔎 Real Scan Logic
+local function scanForBackdoors()
+	resultBox.Text = "Scanning...\n"
+	wait(0.5)
+
+	local found = false
+	local susWords = {"loadstring", "getfenv", "setfenv", "require%(", "HttpGet", "game:HttpGet", "RunString", "load%("}
+
+	-- Scan remotes
+	for _, v in ipairs(game:GetDescendants()) do
+		if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") or v:IsA("BindableEvent") or v:IsA("BindableFunction") then
+			if v.Name:lower():find("backdoor") or v.Name:lower():find("hack") or v.Name:lower():find("exploit") then
+				resultBox.Text = resultBox.Text .. "[REMOTE SUS] "..v:GetFullName().."\n"
+				found = true
+			end
+		end
+	end
+
+	-- Scan scripts
+	for _, scr in ipairs(game:GetDescendants()) do
+		if scr:IsA("LocalScript") or scr:IsA("Script") or scr:IsA("ModuleScript") then
+			local source = ""
+			pcall(function()
+				source = scr.Source
+			end)
+
+			if source ~= "" then
+				for _, word in ipairs(susWords) do
+					if source:find(word) then
+						resultBox.Text = resultBox.Text .. "[SCRIPT SUS] "..scr:GetFullName().." contains "..word.."\n"
+						found = true
+						break
+					end
+				end
+			end
+		end
+	end
+
+	if found then
+		resultBox.Text = resultBox.Text .. "\n🔥 BACKDOOR FOUND!"
+	else
+		resultBox.Text = resultBox.Text .. "\n✅ No backdoor found :("
+	end
+end
+
+-- Button connection
+scanBtn.MouseButton1Click:Connect(scanForBackdoors)
