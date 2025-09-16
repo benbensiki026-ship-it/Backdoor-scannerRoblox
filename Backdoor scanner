@@ -1,0 +1,67 @@
+-- 🔎 Advanced Backdoor Scanner (Safe for Studio)
+-- Scans scripts for suspicious code patterns & shady remotes
+-- Made for developers to detect hidden backdoors before publishing
+
+local Players = game:GetService("Players")
+
+-- Big list of sus keywords/patterns
+local susPatterns = {
+    "require%(", -- inserting module IDs
+    "loadstring", "LoadLibrary",
+    "getfenv", "setfenv",
+    "HttpGet", "HttpService",
+    "getrawmetatable", "setreadonly",
+    "newcclosure", "hookfunction",
+    "saveinstance", "is_synapse_function",
+    "syn%.", "fluxus", "krnl", -- executor refs
+    "while true do", "repeat until false", -- infinite loops
+    "spawn%(", "delay%(", -- auto-running
+    "pcall%(", "xpcall%(", -- hidden exec
+    "debug%.", "getgc", "getreg", -- deep environment stuff
+    "string%.dump",
+    "game:HttpGet", "game:HttpPost",
+    "coroutine%.resume", "coroutine%.wrap",
+    "fireclickdetector", "firesignal", "fireproximityprompt",
+    "TeleportService", "MarketplaceService", -- abuse services
+    "InsertService", "loadfile", "dofile",
+    "shared%.", "getrenv", -- env stealing
+    "KeyPress", "mouse%.", -- fake input
+    "os%.", "io%.", -- file system (not legit in Roblox)
+}
+
+local foundSomething = false
+
+-- Scan function
+local function scanScripts(container)
+    for _, obj in ipairs(container:GetDescendants()) do
+        if obj:IsA("Script") or obj:IsA("LocalScript") or obj:IsA("ModuleScript") then
+            local success, source = pcall(function()
+                return obj.Source
+            end)
+
+            if success and source then
+                for _, pattern in ipairs(susPatterns) do
+                    if string.find(source, pattern) then
+                        warn("[BackdoorScanner] ⚠️ Suspicious code found in:", obj:GetFullName(), " Pattern:", pattern)
+                        foundSomething = true
+                    end
+                end
+            end
+        elseif obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
+            local lname = obj.Name:lower()
+            if lname:find("backdoor") or lname:find("admin") or lname:find("cmd") or lname:find("free") then
+                warn("[BackdoorScanner] ⚠️ Suspicious remote detected:", obj:GetFullName())
+                foundSomething = true
+            end
+        end
+    end
+end
+
+-- Run full scan
+scanScripts(game)
+
+if foundSomething then
+    print("[BackdoorScanner] 🚨 BACKDOOR FOUND 🚨")
+else
+    print("[BackdoorScanner] No backdoor found :(")
+end
